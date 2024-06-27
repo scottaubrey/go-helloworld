@@ -14,9 +14,9 @@ type Options struct {
 }
 
 type API interface {
-	GetOccurences() (*Occurrences, error)
-	GetWords() (*Words, error)
-	AddWord(word string) (*Words, error)
+	GetOccurences() (*occurrences, error)
+	GetWords() (*words, error)
+	AddWord(word string) (*words, error)
 }
 
 type api struct {
@@ -24,13 +24,13 @@ type api struct {
 	baseUrl *url.URL
 }
 
-func (api api) GetOccurences() (*Occurrences, error) {
+func (api api) GetOccurences() (*occurrences, error) {
 	response, err := doRequest(api.client, api.baseUrl, "/occurrence")
 	if err != nil {
 		return nil, err
 	}
 
-	occurrences, ok := response.(Occurrences)
+	occurrences, ok := response.(occurrences)
 	if !ok {
 		return nil, fmt.Errorf("expected Response type of Occurrences but got something else")
 	}
@@ -38,13 +38,13 @@ func (api api) GetOccurences() (*Occurrences, error) {
 	return &occurrences, nil
 }
 
-func (api api) GetWords() (*Words, error) {
+func (api api) GetWords() (*words, error) {
 	response, err := doRequest(api.client, api.baseUrl, "/words")
 	if err != nil {
 		return nil, err
 	}
 
-	words, ok := response.(Words)
+	words, ok := response.(words)
 	if !ok {
 		return nil, fmt.Errorf("expected Response type of Words but got something else")
 	}
@@ -52,13 +52,13 @@ func (api api) GetWords() (*Words, error) {
 	return &words, nil
 }
 
-func (api api) AddWord(word string) (*Words, error) {
+func (api api) AddWord(word string) (*words, error) {
 	response, err := doRequest(api.client, api.baseUrl, "/words?input="+word)
 	if err != nil {
 		return nil, err
 	}
 
-	words, ok := response.(Words)
+	words, ok := response.(words)
 	if !ok {
 		return nil, fmt.Errorf("expected Response type of Words but got something else")
 	}

@@ -9,27 +9,27 @@ import (
 	"strings"
 )
 
-type Page struct {
+type page struct {
 	Name string `json:"page"`
 }
 
-type Words struct {
+type words struct {
 	Input string   `json:"input"`
 	Words []string `json:"words"`
 }
 
-func (words Words) GetResponse() string {
+func (words words) GetResponse() string {
 	formattedWords := "Words\n"
 	formattedWords += "-----\n\n"
 	formattedWords += strings.Join(words.Words, "\n")
 	return formattedWords
 }
 
-type Occurrences struct {
+type occurrences struct {
 	Words map[string]int `json:"words"`
 }
 
-func (occurrences Occurrences) GetResponse() string {
+func (occurrences occurrences) GetResponse() string {
 	formattedOccurrences := "Word\tCount\n"
 	formattedOccurrences += "----\t-----\n\n"
 
@@ -78,7 +78,7 @@ func doRequest(client http.Client, baseUrl *url.URL, path string) (Response, err
 		}
 	}
 
-	var page Page
+	var page page
 	err = json.Unmarshal(body, &page)
 	if err != nil {
 		return nil, RequestError{
@@ -91,7 +91,7 @@ func doRequest(client http.Client, baseUrl *url.URL, path string) (Response, err
 
 	switch page.Name {
 	case "words":
-		var words Words
+		var words words
 		err = json.Unmarshal(body, &words)
 		if err != nil {
 			return nil, RequestError{
@@ -104,7 +104,7 @@ func doRequest(client http.Client, baseUrl *url.URL, path string) (Response, err
 
 		return words, nil
 	case "occurrence":
-		var occurrences Occurrences
+		var occurrences occurrences
 		err = json.Unmarshal(body, &occurrences)
 		if err != nil {
 			return nil, RequestError{
