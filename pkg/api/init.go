@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type Options struct {
@@ -73,6 +74,12 @@ func New(options Options) (API, error) {
 		fmt.Printf("URL Parse Error: %s\n", err)
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	if parsedUrl.Path == "" {
+		parsedUrl.Path = "/"
+	} else {
+		parsedUrl.Path = strings.TrimRight(parsedUrl.Path, "/") + "/"
 	}
 
 	client := http.Client{}

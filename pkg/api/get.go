@@ -46,11 +46,7 @@ type response interface {
 func doRequest(client http.Client, baseUrl *url.URL, path string) (response, error) {
 
 	requestUrl := baseUrl.Scheme + "://" + baseUrl.Host
-	if baseUrl.Path == "" {
-		requestUrl += "/"
-	} else {
-		requestUrl += baseUrl.Path
-	}
+	requestUrl += baseUrl.Path
 	requestUrl += path
 
 	response, err := client.Get(requestUrl)

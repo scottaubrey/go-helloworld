@@ -26,11 +26,7 @@ func doLoginRequest(client http.Client, baseUrl *url.URL, password string) (stri
 		return "", fmt.Errorf("unmarshal error: %s", err)
 	}
 	loginUrl := baseUrl.Scheme + "://" + baseUrl.Host
-	if baseUrl.Path == "" {
-		loginUrl += "/"
-	} else {
-		loginUrl += baseUrl.Path
-	}
+	loginUrl += baseUrl.Path
 	loginUrl += "login"
 
 	response, err := client.Post(loginUrl, "application/json", bytes.NewBuffer(requestBody))
