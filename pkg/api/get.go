@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -42,7 +43,16 @@ type Response interface {
 	GetResponse() string
 }
 
-func doRequest(client http.Client, requestUrl string) (Response, error) {
+func doRequest(client http.Client, baseUrl *url.URL, path string) (Response, error) {
+
+	requestUrl := baseUrl.Scheme + "://" + baseUrl.Host
+	if baseUrl.Path == "" {
+		requestUrl += "/"
+	} else {
+		requestUrl += baseUrl.Path
+	}
+	requestUrl += path
+
 	response, err := client.Get(requestUrl)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP GET Error: %s", err)

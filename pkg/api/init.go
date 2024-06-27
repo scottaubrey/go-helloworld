@@ -21,11 +21,11 @@ type API interface {
 
 type Api struct {
 	client  http.Client
-	baseUrl string
+	baseUrl *url.URL
 }
 
 func (api Api) GetOccurences() (*Occurrences, error) {
-	response, err := doRequest(api.client, api.baseUrl+"/occurrence")
+	response, err := doRequest(api.client, api.baseUrl, "/occurrence")
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (api Api) GetOccurences() (*Occurrences, error) {
 }
 
 func (api Api) GetWords() (*Words, error) {
-	response, err := doRequest(api.client, api.baseUrl+"/words")
+	response, err := doRequest(api.client, api.baseUrl, "/words")
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (api Api) GetWords() (*Words, error) {
 }
 
 func (api Api) AddWord(word string) (*Words, error) {
-	response, err := doRequest(api.client, api.baseUrl+"/words?input="+word)
+	response, err := doRequest(api.client, api.baseUrl, "/words?input="+word)
 	if err != nil {
 		return nil, err
 	}
@@ -90,6 +90,6 @@ func New(options Options) (*Api, error) {
 	}
 	return &Api{
 		client:  client,
-		baseUrl: options.BaseUrl,
+		baseUrl: parsedUrl,
 	}, nil
 }
