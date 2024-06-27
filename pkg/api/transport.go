@@ -5,12 +5,12 @@ import (
 	"net/http"
 )
 
-type MyJwtTransport struct {
+type myJwtTransport struct {
 	transport http.RoundTripper
 	token     string
 }
 
-func (t MyJwtTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+func (t myJwtTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	if t.token != "" {
 		request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", t.token))
 	}

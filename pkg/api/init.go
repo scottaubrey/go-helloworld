@@ -83,7 +83,7 @@ func New(options Options) (API, error) {
 			return nil, err
 		}
 
-		client.Transport = MyJwtTransport{
+		client.Transport = myJwtTransport{
 			token:     token,
 			transport: http.DefaultTransport,
 		}
