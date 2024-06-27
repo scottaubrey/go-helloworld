@@ -58,12 +58,34 @@ func main() {
 
 	parsedUrl, err := url.ParseRequestURI(requestUrl)
 	if err != nil {
-		fmt.Sprintf("URL Parse Error: %s\n", err)
+		fmt.Printf("URL Parse Error: %s\n", err)
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	response, err := doRequest(parsedUrl.String())
+	client := http.Client{}
+
+	if password != "" {
+		token, err := doLoginRequest(client, parsedUrl.Scheme+"://"+parsedUrl.Host+"/login", password)
+		if err != nil {
+			if requestErr, ok := err.(RequestError); ok {
+				log.Fatalf(
+					"Error with login request with status code %d: %s\n\nBody:\n%s",
+					requestErr.HTTPCode,
+					requestErr.Err,
+					requestErr.Body,
+				)
+			}
+			log.Fatal(err)
+		}
+
+		client.Transport = MyJwtTransport{
+			token:     token,
+			transport: http.DefaultTransport,
+		}
+	}
+
+	response, err := doRequest(client, parsedUrl.String())
 	if err != nil {
 		if requestErr, ok := err.(RequestError); ok {
 			log.Fatalf(
@@ -80,8 +102,8 @@ func main() {
 	fmt.Printf("Response: \n%v\n", response.GetResponse())
 }
 
-func doRequest(requestUrl string) (Response, error) {
-	response, err := http.Get(requestUrl)
+func doRequest(client http.Client, requestUrl string) (Response, error) {
+	response, err := client.Get(requestUrl)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP GET Error: %s", err)
 	}
