@@ -1,6 +1,7 @@
-package main
+package api
 
 type RequestError struct {
+	Url      string
 	HTTPCode int
 	Body     string
 	Err      string

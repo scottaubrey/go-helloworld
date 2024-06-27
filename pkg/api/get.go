@@ -1,14 +1,10 @@
-package main
+package api
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"net/url"
-	"os"
 	"strings"
 )
 
@@ -46,62 +42,6 @@ type Response interface {
 	GetResponse() string
 }
 
-func main() {
-	var requestUrl string
-	var password string
-	var parsedUrl *url.URL
-
-	flag.StringVar(&requestUrl, "url", "", "Url to make a request to")
-	flag.StringVar(&password, "password", "", "password")
-
-	flag.Parse()
-
-	parsedUrl, err := url.ParseRequestURI(requestUrl)
-	if err != nil {
-		fmt.Printf("URL Parse Error: %s\n", err)
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	client := http.Client{}
-
-	if password != "" {
-		token, err := doLoginRequest(client, parsedUrl.Scheme+"://"+parsedUrl.Host+"/login", password)
-		if err != nil {
-			if requestErr, ok := err.(RequestError); ok {
-				log.Fatalf(
-					"Error with login request with status code %d: %s\n\nBody:\n%s",
-					requestErr.HTTPCode,
-					requestErr.Err,
-					requestErr.Body,
-				)
-			}
-			log.Fatal(err)
-		}
-
-		client.Transport = MyJwtTransport{
-			token:     token,
-			transport: http.DefaultTransport,
-		}
-	}
-
-	response, err := doRequest(client, parsedUrl.String())
-	if err != nil {
-		if requestErr, ok := err.(RequestError); ok {
-			log.Fatalf(
-				"Error with request to %s with status code %d: %s\n\nBody:\n%s",
-				requestUrl,
-				requestErr.HTTPCode,
-				requestErr.Err,
-				requestErr.Body,
-			)
-		}
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Response: \n%v\n", response.GetResponse())
-}
-
 func doRequest(client http.Client, requestUrl string) (Response, error) {
 	response, err := client.Get(requestUrl)
 	if err != nil {
@@ -121,6 +61,7 @@ func doRequest(client http.Client, requestUrl string) (Response, error) {
 
 	if !json.Valid(body) {
 		return nil, RequestError{
+			Url:      requestUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
 			Err:      "Invalid Json",
@@ -131,6 +72,7 @@ func doRequest(client http.Client, requestUrl string) (Response, error) {
 	err = json.Unmarshal(body, &page)
 	if err != nil {
 		return nil, RequestError{
+			Url:      requestUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
 			Err:      fmt.Sprintf("JSON unmarshall Error: %s", err),
@@ -143,6 +85,7 @@ func doRequest(client http.Client, requestUrl string) (Response, error) {
 		err = json.Unmarshal(body, &words)
 		if err != nil {
 			return nil, RequestError{
+				Url:      requestUrl,
 				HTTPCode: response.StatusCode,
 				Body:     string(body),
 				Err:      fmt.Sprintf("JSON unmarshall Error: %s", err),
@@ -155,6 +98,7 @@ func doRequest(client http.Client, requestUrl string) (Response, error) {
 		err = json.Unmarshal(body, &occurrences)
 		if err != nil {
 			return nil, RequestError{
+				Url:      requestUrl,
 				HTTPCode: response.StatusCode,
 				Body:     string(body),
 				Err:      fmt.Sprintf("JSON unmarshall Error: %s", err),
@@ -169,6 +113,7 @@ func doRequest(client http.Client, requestUrl string) (Response, error) {
 	}
 
 	return nil, RequestError{
+		Url:      requestUrl,
 		HTTPCode: response.StatusCode,
 		Body:     string(body),
 		Err:      fmt.Sprintf("Unknown Error: %s", err),

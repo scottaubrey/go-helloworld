@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"bytes"
@@ -6,17 +6,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
-type LoginRequest struct {
+type loginRequest struct {
 	Password string `json:"password"`
 }
-type LoginResponse struct {
+type loginResponse struct {
 	Token string `json:"token"`
 }
 
-func doLoginRequest(client http.Client, loginUrl, password string) (string, error) {
-	loginRequest := LoginRequest{
+func doLoginRequest(client http.Client, baseUrl *url.URL, password string) (string, error) {
+	loginRequest := loginRequest{
 		Password: password,
 	}
 
@@ -24,10 +25,11 @@ func doLoginRequest(client http.Client, loginUrl, password string) (string, erro
 	if err != nil {
 		return "", fmt.Errorf("unmarshal error: %s", err)
 	}
-
+	loginUrl := baseUrl.Scheme + "://" + baseUrl.Host + baseUrl.Path + "login"
 	response, err := client.Post(loginUrl, "application/json", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return "", RequestError{
+			Url:      loginUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(requestBody),
 			Err:      fmt.Sprintf("request error: %s", err),
@@ -36,6 +38,7 @@ func doLoginRequest(client http.Client, loginUrl, password string) (string, erro
 
 	if response.StatusCode != 200 {
 		return "", RequestError{
+			Url:      loginUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(requestBody),
 			Err:      fmt.Sprintf("request error: %s", err),
@@ -45,6 +48,7 @@ func doLoginRequest(client http.Client, loginUrl, password string) (string, erro
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", RequestError{
+			Url:      loginUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(requestBody),
 			Err:      fmt.Sprintf("error reading body: %s", err),
@@ -53,16 +57,18 @@ func doLoginRequest(client http.Client, loginUrl, password string) (string, erro
 
 	if !json.Valid(body) {
 		return "", RequestError{
+			Url:      loginUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
 			Err:      fmt.Sprintf("invalid JSON: %s", err),
 		}
 	}
 
-	var loginResponse LoginResponse
+	var loginResponse loginResponse
 	err = json.Unmarshal(body, &loginResponse)
 	if err != nil {
 		return "", RequestError{
+			Url:      loginUrl,
 			HTTPCode: response.StatusCode,
 			Body:     string(body),
 			Err:      fmt.Sprintf("unmarshall error: %s", err),
