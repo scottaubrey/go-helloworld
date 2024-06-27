@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/scottaubrey/go-helloworld/pkg/api"
 )
@@ -43,7 +42,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Words: %s", strings.Join(words.Words, ", "))
+		fmt.Println(words.GetResponse())
 		os.Exit(0)
 	}
 	if command == "getOccurences" {
@@ -51,12 +50,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println("Words\tOccurence")
-		fmt.Println("-----\t---------")
-		for word, count := range occurences.Words {
-			fmt.Printf("%s\t%d\n", word, count)
-		}
+		fmt.Println(occurences.GetResponse())
 		os.Exit(0)
 	}
 	if command == "addWord" {
@@ -69,7 +63,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Words: %s", strings.Join(words.Words, ", "))
+		fmt.Println(words.GetResponse())
 		os.Exit(0)
 	}
 	fmt.Println("invalid command or command not given")
