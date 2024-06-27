@@ -39,11 +39,11 @@ func (occurrences occurrences) GetResponse() string {
 	return formattedOccurrences
 }
 
-type Response interface {
+type response interface {
 	GetResponse() string
 }
 
-func doRequest(client http.Client, baseUrl *url.URL, path string) (Response, error) {
+func doRequest(client http.Client, baseUrl *url.URL, path string) (response, error) {
 
 	requestUrl := baseUrl.Scheme + "://" + baseUrl.Host
 	if baseUrl.Path == "" {
