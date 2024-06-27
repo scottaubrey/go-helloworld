@@ -19,12 +19,12 @@ type API interface {
 	AddWord(word string) (*Words, error)
 }
 
-type Api struct {
+type api struct {
 	client  http.Client
 	baseUrl *url.URL
 }
 
-func (api Api) GetOccurences() (*Occurrences, error) {
+func (api api) GetOccurences() (*Occurrences, error) {
 	response, err := doRequest(api.client, api.baseUrl, "/occurrence")
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (api Api) GetOccurences() (*Occurrences, error) {
 	return &occurrences, nil
 }
 
-func (api Api) GetWords() (*Words, error) {
+func (api api) GetWords() (*Words, error) {
 	response, err := doRequest(api.client, api.baseUrl, "/words")
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (api Api) GetWords() (*Words, error) {
 	return &words, nil
 }
 
-func (api Api) AddWord(word string) (*Words, error) {
+func (api api) AddWord(word string) (*Words, error) {
 	response, err := doRequest(api.client, api.baseUrl, "/words?input="+word)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (api Api) AddWord(word string) (*Words, error) {
 	return &words, nil
 }
 
-func New(options Options) (*Api, error) {
+func New(options Options) (API, error) {
 
 	parsedUrl, err := url.ParseRequestURI(options.BaseUrl)
 	if err != nil {
@@ -88,7 +88,7 @@ func New(options Options) (*Api, error) {
 			transport: http.DefaultTransport,
 		}
 	}
-	return &Api{
+	return &api{
 		client:  client,
 		baseUrl: parsedUrl,
 	}, nil
