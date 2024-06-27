@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -46,14 +47,33 @@ type Response interface {
 }
 
 func main() {
-	args := os.Args
+	var requestUrl string
+	var password string
+	var parsedUrl *url.URL
 
-	if len(args) < 2 {
-		log.Fatalf("Usage: %v <url>\n", args[0])
+	flag.StringVar(&requestUrl, "url", "", "Url to make a request to")
+	flag.StringVar(&password, "password", "", "password")
+
+	flag.Parse()
+
+	parsedUrl, err := url.ParseRequestURI(requestUrl)
+	if err != nil {
+		fmt.Sprintf("URL Parse Error: %s\n", err)
+		flag.Usage()
+		os.Exit(1)
 	}
 
-	response, err := doRequest(args[1])
+	response, err := doRequest(parsedUrl.String())
 	if err != nil {
+		if requestErr, ok := err.(RequestError); ok {
+			log.Fatalf(
+				"Error with request to %s with status code %d: %s\n\nBody:\n%s",
+				requestUrl,
+				requestErr.HTTPCode,
+				requestErr.Err,
+				requestErr.Body,
+			)
+		}
 		log.Fatal(err)
 	}
 
@@ -61,10 +81,6 @@ func main() {
 }
 
 func doRequest(requestUrl string) (Response, error) {
-	if _, err := url.ParseRequestURI(requestUrl); err != nil {
-		return nil, fmt.Errorf("URL Parse Error: %s", err)
-	}
-
 	response, err := http.Get(requestUrl)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP GET Error: %s", err)
@@ -81,10 +97,22 @@ func doRequest(requestUrl string) (Response, error) {
 		return nil, fmt.Errorf("HTTP GET Error: Status code is %d not 200. Body: %s", response.StatusCode, body)
 	}
 
+	if !json.Valid(body) {
+		return nil, RequestError{
+			HTTPCode: response.StatusCode,
+			Body:     string(body),
+			Err:      "Invalid Json",
+		}
+	}
+
 	var page Page
 	err = json.Unmarshal(body, &page)
 	if err != nil {
-		return nil, fmt.Errorf("JSON unmarshall Error: %s", err)
+		return nil, RequestError{
+			HTTPCode: response.StatusCode,
+			Body:     string(body),
+			Err:      fmt.Sprintf("JSON unmarshall Error: %s", err),
+		}
 	}
 
 	switch page.Name {
@@ -92,14 +120,23 @@ func doRequest(requestUrl string) (Response, error) {
 		var words Words
 		err = json.Unmarshal(body, &words)
 		if err != nil {
-			return nil, fmt.Errorf("JSON unmarshall Error: %s", err)
+			return nil, RequestError{
+				HTTPCode: response.StatusCode,
+				Body:     string(body),
+				Err:      fmt.Sprintf("JSON unmarshall Error: %s", err),
+			}
 		}
+
 		return words, nil
 	case "occurrence":
 		var occurrences Occurrences
 		err = json.Unmarshal(body, &occurrences)
 		if err != nil {
-			return nil, fmt.Errorf("JSON unmarshall Error: %s", err)
+			return nil, RequestError{
+				HTTPCode: response.StatusCode,
+				Body:     string(body),
+				Err:      fmt.Sprintf("JSON unmarshall Error: %s", err),
+			}
 		}
 
 		if _, ok := occurrences.Words["Scott"]; ok {
@@ -109,5 +146,9 @@ func doRequest(requestUrl string) (Response, error) {
 		return occurrences, nil
 	}
 
-	return nil, fmt.Errorf("unknown Page: %s", page.Name)
+	return nil, RequestError{
+		HTTPCode: response.StatusCode,
+		Body:     string(body),
+		Err:      fmt.Sprintf("Unknown Error: %s", err),
+	}
 }
