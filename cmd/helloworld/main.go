@@ -36,8 +36,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	apiClient.GetWords()
-
 	command := flag.Arg(0)
 	if command == "getWords" {
 		words, err := apiClient.GetWords()
