@@ -39,11 +39,25 @@ func (occurrences occurrences) GetResponse() string {
 	return formattedOccurrences
 }
 
+type occurrencesPage struct {
+	occurrences
+	page
+}
+
+type wordsPage struct {
+	words
+	page
+}
+
 type response interface {
 	GetResponse() string
 }
 
-func doRequest(client http.Client, baseUrl *url.URL, path string) (response, error) {
+type Client interface {
+	Get(requestUrl string) (resp *http.Response, err error)
+}
+
+func doRequest(client Client, baseUrl *url.URL, path string) (response, error) {
 
 	requestUrl := baseUrl.Scheme + "://" + baseUrl.Host
 	requestUrl += baseUrl.Path
@@ -112,7 +126,7 @@ func doRequest(client http.Client, baseUrl *url.URL, path string) (response, err
 		}
 
 		if _, ok := occurrences.Words["Scott"]; ok {
-			fmt.Println("\n> Hey! I found a Scott! 👋\n")
+			fmt.Print("\n> Hey! I found a Scott! 👋\n\n")
 		}
 
 		return occurrences, nil

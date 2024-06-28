@@ -26,7 +26,7 @@ type api struct {
 }
 
 func (api api) GetOccurences() (*occurrences, error) {
-	response, err := doRequest(api.client, api.baseUrl, "occurrence")
+	response, err := doRequest(&api.client, api.baseUrl, "occurrence")
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (api api) GetOccurences() (*occurrences, error) {
 }
 
 func (api api) GetWords() (*words, error) {
-	response, err := doRequest(api.client, api.baseUrl, "words")
+	response, err := doRequest(&api.client, api.baseUrl, "words")
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (api api) GetWords() (*words, error) {
 }
 
 func (api api) AddWord(word string) (*words, error) {
-	response, err := doRequest(api.client, api.baseUrl, "words?input="+word)
+	response, err := doRequest(&api.client, api.baseUrl, "words?input="+word)
 	if err != nil {
 		return nil, err
 	}
