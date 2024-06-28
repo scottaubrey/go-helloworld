@@ -17,7 +17,7 @@ func (client MockClient) Get(requestUrl string) (resp *http.Response, err error)
 	return &client.MockedResponse, nil
 }
 
-func TestDoGetRequest(t *testing.T) {
+func TestDoGetWordsRequest(t *testing.T) {
 	words := wordsPage{
 		page:  page{"words"},
 		words: words{Input: "abc", Words: []string{"abc", "def"}},
@@ -25,7 +25,7 @@ func TestDoGetRequest(t *testing.T) {
 
 	wordsJson, err := json.Marshal(words)
 	if err != nil {
-		t.Errorf("marshal error: %v", err)
+		t.Fatalf("marshal error: %v", err)
 	}
 
 	client := MockClient{
@@ -37,16 +37,50 @@ func TestDoGetRequest(t *testing.T) {
 
 	baseUrl, err := url.Parse("http://localhost/")
 	if err != nil {
-		t.Errorf("Url parse error: %v", err)
+		t.Fatalf("Url parse error: %v", err)
 	}
 
 	response, err := doRequest(client, baseUrl, "words")
 	if err != nil {
-		t.Errorf("response error: %v", err)
+		t.Fatalf("response error: %v", err)
 	}
 
 	responseString := response.GetResponse()
 	if responseString != "Words\n-----\n\nabc\ndef" {
-		t.Errorf("Response did not match expected output: %s", responseString)
+		t.Fatalf("Response did not match expected output: %s", responseString)
+	}
+}
+
+func TestDoGetOccurencesRequest(t *testing.T) {
+	occurrences := occurrencesPage{
+		page:        page{"occurrence"},
+		occurrences: occurrences{map[string]int{"abc": 2, "def": 1}},
+	}
+
+	occurrencesJson, err := json.Marshal(occurrences)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
+
+	client := MockClient{
+		MockedResponse: http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(bytes.NewReader(occurrencesJson)),
+		},
+	}
+
+	baseUrl, err := url.Parse("http://localhost/")
+	if err != nil {
+		t.Fatalf("Url parse error: %v", err)
+	}
+
+	response, err := doRequest(client, baseUrl, "occurences")
+	if err != nil {
+		t.Fatalf("response error: %v", err)
+	}
+
+	responseString := response.GetResponse()
+	if responseString != "Word\tCount\n----\t-----\n\nabc\t2\ndef\t1\n" {
+		t.Fatalf("Response did not match expected output: %s", responseString)
 	}
 }
